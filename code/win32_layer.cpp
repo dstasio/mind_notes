@@ -136,6 +136,8 @@ int WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, int sho
 
             sw_clear_backbuffer(&backbuffer);
 
+            sw_draw_quad(&backbuffer, {50, 50}, {300, 500}, 0x3F77F3);
+
             sw_show_backbuffer(window, &backbuffer);
 
             last_performance_counter = current_performance_counter;

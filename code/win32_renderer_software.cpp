@@ -1,6 +1,6 @@
 // win32_renderer_software.cpp
 #include "win32_renderer_software.h"
-//#include "ds_math.h"
+#include "ds_math.h"
 
 #define pixel_at_index(mem, x, y, w) (((u32*)(mem)) + ((y) * (w)) + (x))
 
@@ -29,6 +29,7 @@ internal void sw_draw_char(Renderer_Backbuffer *backbuffer,
         }
     }
 }
+#endif
 
 internal void sw_draw_quad(Renderer_Backbuffer *backbuffer,
                            v2i pos, v2i size, u32 color = 0xFFFFFF)
@@ -45,7 +46,6 @@ internal void sw_draw_quad(Renderer_Backbuffer *backbuffer,
         *pixel_at_index(backbuffer->memory, x, y, backbuffer->width) = color;
     }}
 }
-#endif
 
 internal void sw_clear_backbuffer(Renderer_Backbuffer *backbuffer)
 {
