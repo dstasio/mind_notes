@@ -29,7 +29,7 @@ void md_init_freetype(u32 dpi)
 
 }
 
-void md_print_char(Renderer_Backbuffer *backbuffer, v2i pos, u32 codepoint)
+u32 md_print_char(Renderer_Backbuffer *backbuffer, v2i pos, u32 codepoint)
 {
     FT_Error error;
     auto glyph_index = FT_Get_Char_Index(global_face, codepoint);
@@ -55,4 +55,6 @@ void md_print_char(Renderer_Backbuffer *backbuffer, v2i pos, u32 codepoint)
             sw_draw_pixel(backbuffer, {(s32)x + pos.x, (s32)y + pos.y}, color);
         }
     }
+
+    return global_face->glyph->advance.x >> 6;
 }
