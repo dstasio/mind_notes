@@ -2,6 +2,7 @@
 
 struct Renderer_Backbuffer
 {
+    // Memory format: u32 0xAABBGGRR
     void *memory;
     u32   width;
     u32   height;

@@ -1,9 +1,9 @@
 #if !defined(DATATYPES_H)
 #include <stdint.h>
 
-#define global        static
-#define internal      static
-#define local_persist static
+#define ds_global        static
+#define ds_internal      static
+#define ds_local_persist static
 
 #define KiB(k) (1024LL*(k))
 #define MiB(m) (1024LL*KiB(m))

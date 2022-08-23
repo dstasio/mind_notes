@@ -4,8 +4,11 @@
 
 #define pixel_at_index(mem, x, y, w) (((u32*)(mem)) + ((y) * (w)) + (x))
 
+ds_internal Renderer_Backbuffer global_backbuffer = {};
+
+
 #if 0
-internal void sw_draw_char(Renderer_Backbuffer *backbuffer,
+ds_internal void sw_draw_char(Renderer_Backbuffer *backbuffer,
                            v2i pos, char c, u32 color = 0xFFFFFF)
 {
     v2i tl = {}; // top-left
@@ -31,8 +34,8 @@ internal void sw_draw_char(Renderer_Backbuffer *backbuffer,
 }
 #endif
 
-internal void sw_draw_quad(Renderer_Backbuffer *backbuffer,
-                           v2i pos, v2i size, u32 color = 0xFFFFFF)
+ds_internal void sw_draw_quad(Renderer_Backbuffer *backbuffer,
+                           v2i pos, v2i size, u32 color = 0xFFFFFFFF)
 {
     v2i tl = {}; // top-left
     v2i br = {}; // bottom-right
@@ -47,12 +50,19 @@ internal void sw_draw_quad(Renderer_Backbuffer *backbuffer,
     }}
 }
 
-internal void sw_clear_backbuffer(Renderer_Backbuffer *backbuffer)
+ds_internal void sw_draw_pixel(Renderer_Backbuffer *backbuffer,
+                               v2i pos, u32 color = 0xFFFFFFFF)
+{
+    // @todo: check bounds
+    *pixel_at_index(backbuffer->memory, pos.x, pos.y, backbuffer->width) = color;
+}
+
+ds_internal void sw_clear_backbuffer(Renderer_Backbuffer *backbuffer)
 {
     SecureZeroMemory(backbuffer->memory, backbuffer->width*backbuffer->height*4);
 }
 
-internal void sw_show_backbuffer(HWND window, Renderer_Backbuffer *backbuffer)
+ds_internal void sw_show_backbuffer(HWND window, Renderer_Backbuffer *backbuffer)
 {
     HDC device_context = GetDC(window);
     StretchDIBits(device_context,
@@ -63,7 +73,7 @@ internal void sw_show_backbuffer(HWND window, Renderer_Backbuffer *backbuffer)
     ReleaseDC(window, device_context);
 }
 
-internal void sw_resize_backbuffer(Renderer_Backbuffer *backbuffer, u32 width, u32 height)
+ds_internal void sw_resize_backbuffer(Renderer_Backbuffer *backbuffer, u32 width, u32 height)
 {
     backbuffer->width                        = width;
     backbuffer->height                       = height;

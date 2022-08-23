@@ -18,12 +18,22 @@
     #define ds_assert(expr)
 #endif
 
-#include "win32_renderer_software.cpp"
+#if DS_DEBUG
+    #define debug_break __debugbreak()
+#else
+    #define debug_break
+#endif
 
-global b32 global_running;
-global b32 global_error;
-global u32 global_width  = 800;
-global u32 global_height = 600;
+
+#include "win32_renderer_software.cpp"
+#include "font_rasterizer.cpp"
+
+#include "mind.cpp"
+
+ds_global b32 global_running;
+ds_global b32 global_error;
+ds_global u32 global_width  = 800;
+ds_global u32 global_height = 600;
 
 LRESULT CALLBACK
 window_proc(HWND window, UINT message, WPARAM w, LPARAM l)
@@ -109,6 +119,9 @@ int WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, int sho
         Renderer_Backbuffer backbuffer = {};
         sw_resize_backbuffer(&backbuffer, global_width, global_height);
 
+        u32 dpi = GetDpiForWindow(window);
+        md_init_freetype(dpi);
+
         while(global_running && !global_error)
         {
             qpf_success = QueryPerformanceCounter((LARGE_INTEGER *)&current_performance_counter);
@@ -134,11 +147,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, int sho
                 dtime = (r32)(current_performance_counter - last_performance_counter) / (r32)performance_counter_frequency;
             }
 
-            sw_clear_backbuffer(&backbuffer);
-
-            sw_draw_quad(&backbuffer, {50, 50}, {300, 500}, 0x3F77F3);
-
-            sw_show_backbuffer(window, &backbuffer);
+            mind_app(window, &backbuffer);
 
             last_performance_counter = current_performance_counter;
         }
