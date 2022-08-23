@@ -54,7 +54,27 @@ ds_internal void sw_draw_pixel(Renderer_Backbuffer *backbuffer,
                                v2i pos, u32 color = 0xFFFFFFFF)
 {
     // @todo: check bounds
-    *pixel_at_index(backbuffer->memory, pos.x, pos.y, backbuffer->width) = color;
+    u32 *dest = pixel_at_index(backbuffer->memory, pos.x, pos.y, backbuffer->width);
+
+    r32 src_a = (r32)((0xFF000000 & color) >> 24) / 255.f;
+    r32 src_r = (r32)((0x00FF0000 & color) >> 16) / 255.f;
+    r32 src_g = (r32)((0x0000FF00 & color) >> 8)  / 255.f;
+    r32 src_b = (r32) (0x000000FF & color)        / 255.f;
+
+    u32 dest_color = *dest;
+    r32 dst_a = (r32)((0xFF000000 & dest_color) >> 24) / 255.f;
+    r32 dst_r = (r32)((0x00FF0000 & dest_color) >> 16) / 255.f;
+    r32 dst_g = (r32)((0x0000FF00 & dest_color) >> 8)  / 255.f;
+    r32 dst_b = (r32) (0x000000FF & dest_color)        / 255.f;
+
+    r32 a = 1.f;
+    r32 r = lerp(dst_r, src_r, src_a);
+    r32 g = lerp(dst_g, src_g, src_a);
+    r32 b = lerp(dst_b, src_b, src_a);
+
+    *dest = (u32)a | (((u32)(r*255.f)) << 16 |
+                      ((u32)(g*255.f)) <<  8 |
+                      ((u32)(b*255.f)));
 }
 
 ds_internal void sw_clear_backbuffer(Renderer_Backbuffer *backbuffer)

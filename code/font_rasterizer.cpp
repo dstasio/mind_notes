@@ -24,12 +24,12 @@ void md_init_freetype(u32 dpi)
         debug_break;
     }
 
-    error = FT_Set_Char_Size(global_face, 0, 300*64, dpi, dpi);
+    error = FT_Set_Char_Size(global_face, 0, 24*64, dpi, dpi);
     if (error) { debug_break; }
 
 }
 
-void md_print_char(Renderer_Backbuffer *backbuffer, u32 codepoint)
+void md_print_char(Renderer_Backbuffer *backbuffer, v2i pos, u32 codepoint)
 {
     FT_Error error;
     auto glyph_index = FT_Get_Char_Index(global_face, codepoint);
@@ -43,14 +43,16 @@ void md_print_char(Renderer_Backbuffer *backbuffer, u32 codepoint)
         if (error) { debug_break; }
     }
 
+    pos.x += global_face->glyph->bitmap_left;
+    pos.y -= global_face->glyph->bitmap_top;
     for (u32 y = 0; y < global_face->glyph->bitmap.rows; ++y) {
         auto pitch = global_face->glyph->bitmap.pitch;
         ds_assert(global_face->glyph->bitmap.width == pitch);
         for (u32 x = 0; x < global_face->glyph->bitmap.width; ++x) {
-            u8 gray   = global_face->glyph->bitmap.buffer[y*pitch + x];
-            u8 alpha  = 8;
-            u32 color = (alpha << 24) | (gray << 16) | (gray << 8) | gray;
-            sw_draw_pixel(backbuffer, {(s32)x, (s32)y}, color);
+            u32 alpha  = global_face->glyph->bitmap.buffer[y*pitch + x] << 24;
+            u32 c     = 0x00;
+            u32 color = c | alpha;
+            sw_draw_pixel(backbuffer, {(s32)x + pos.x, (s32)y + pos.y}, color);
         }
     }
 }
