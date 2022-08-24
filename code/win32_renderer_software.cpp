@@ -53,7 +53,11 @@ ds_internal void sw_draw_quad(Renderer_Backbuffer *backbuffer,
 ds_internal void sw_draw_pixel(Renderer_Backbuffer *backbuffer,
                                v2i pos, u32 color = 0xFFFFFFFF)
 {
-    // @todo: check bounds
+    b32 x_in_bounds = pos.x >= 0 && pos.x < (s32)backbuffer->width;
+    b32 y_in_bounds = pos.y >= 0 && pos.y < (s32)backbuffer->height;
+
+    if (!x_in_bounds || !y_in_bounds) return;
+
     u32 *dest = pixel_at_index(backbuffer->memory, pos.x, pos.y, backbuffer->width);
 
     r32 src_a = (r32)((0xFF000000 & color) >> 24) / 255.f;
