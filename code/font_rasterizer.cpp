@@ -3,6 +3,8 @@
 #include "ft2build.h"
 #include FT_FREETYPE_H
 
+#include "font_rasterizer.h"
+
 ds_global FT_Library ftlib;
 ds_global FT_Face global_face;
 
@@ -29,8 +31,10 @@ void md_init_freetype(u32 dpi)
 
 }
 
-u32 md_print_char(Renderer_Backbuffer *backbuffer, v2i pos, u32 codepoint)
+MD_Rasterized_Glyph md_rasterize_glyph(u32 codepoint)
 {
+    MD_Rasterized_Glyph result = {};
+
     FT_Error error;
     auto glyph_index = FT_Get_Char_Index(global_face, codepoint);
 
@@ -43,18 +47,14 @@ u32 md_print_char(Renderer_Backbuffer *backbuffer, v2i pos, u32 codepoint)
         if (error) { debug_break; }
     }
 
-    pos.x += global_face->glyph->bitmap_left;
-    pos.y -= global_face->glyph->bitmap_top;
-    for (u32 y = 0; y < global_face->glyph->bitmap.rows; ++y) {
-        auto pitch = global_face->glyph->bitmap.pitch;
-        ds_assert(global_face->glyph->bitmap.width == pitch);
-        for (u32 x = 0; x < global_face->glyph->bitmap.width; ++x) {
-            u32 alpha  = global_face->glyph->bitmap.buffer[y*pitch + x] << 24;
-            u32 c     = 0x00;
-            u32 color = c | alpha;
-            sw_draw_pixel(backbuffer, {(s32)x + pos.x, (s32)y + pos.y}, color);
-        }
-    }
+    result.buffer    = global_face->glyph->bitmap.buffer;
+    result.rows      = global_face->glyph->bitmap.rows;
+    result.pitch     = global_face->glyph->bitmap.pitch;
+    result.width     = global_face->glyph->bitmap.width;
+    result.left      = global_face->glyph->bitmap_left;;
+    result.top       = global_face->glyph->bitmap_top;
+    result.advance.x = global_face->glyph->advance.x;
+    result.advance.y = global_face->glyph->advance.y;
 
-    return global_face->glyph->advance.x >> 6;
+    return result;
 }

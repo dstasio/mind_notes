@@ -109,3 +109,36 @@ ds_internal void sw_resize_backbuffer(Renderer_Backbuffer *backbuffer, u32 width
     ds_assert(backbuffer->memory);
 
 }
+
+// pos: lower left corner of the letter (its y is the baseline of the text)
+s32 sw_draw_char(Renderer_Backbuffer *backbuffer, char c, v2i pos, u32 color)
+{
+    // 
+    // @note: the color alpha is currently ignored
+    //
+
+    MD_Rasterized_Glyph glyph = md_rasterize_glyph(c);
+
+    pos.x += glyph.left;
+    pos.y -= glyph.top;
+    for (u32 y = 0; y < glyph.rows; ++y) {
+        ds_assert(glyph.width == glyph.pitch);
+        for (u32 x = 0; x < glyph.width; ++x) {
+            u32 alpha = glyph.buffer[y*glyph.pitch + x] << 24;
+            color    &= 0xFFFFFF;  // deleting the incoming alpha
+            color    |= alpha;     // using the font's alpha
+            sw_draw_pixel(backbuffer, {(s32)x + pos.x, (s32)y + pos.y}, color);
+        }
+    }
+
+    return glyph.advance.x >> 6;
+}
+
+v2i sw_draw_text(Renderer_Backbuffer *backbuffer, char *text, v2i pen_pos, u32 color)
+{
+    for (char *c = text; *c; ++c) {
+        pen_pos.x += sw_draw_char(backbuffer, *c, pen_pos, color);
+    }
+
+    return pen_pos;
+}

@@ -25,8 +25,8 @@
 #endif
 
 
-#include "win32_renderer_software.cpp"
 #include "font_rasterizer.cpp"
+#include "win32_renderer_software.cpp"
 
 #include "mind.cpp"
 
