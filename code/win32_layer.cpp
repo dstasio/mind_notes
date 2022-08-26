@@ -3,7 +3,7 @@
 #include <windows.h>
 
 #if DS_INTERNAL
-    #define output_string(s, ...)        {char Buffer[100];sprintf_s(Buffer, s, __VA_ARGS__);OutputDebugStringA(Buffer);}
+    #define output_string(s, ...)        {wchar_t Buffer[100]; swprintf_s(Buffer, L##s, __VA_ARGS__); OutputDebugString(Buffer);}
     #define throw_error_and_exit(e, ...) {output_string(" ------------------------------[ERROR] "   ## e, __VA_ARGS__); getchar(); global_error = true;}
     #define throw_error(e, ...)           output_string(" ------------------------------[ERROR] "   ## e, __VA_ARGS__)
     #define inform(i, ...)                output_string(" ------------------------------[INFO] "    ## i, __VA_ARGS__)
@@ -58,6 +58,16 @@ window_proc(HWND window, UINT message, WPARAM w, LPARAM l)
             global_height = HIWORD(l);
         } break;
 
+        case WM_CHAR:
+        {
+            inform("CHAR PROC\n");
+        } break;
+
+        case WM_UNICHAR:
+        {
+            inform("UNICODE PROC\n");
+        } break;
+
         // @todo: implement this
         case WM_SETCURSOR:
         {
@@ -65,7 +75,7 @@ window_proc(HWND window, UINT message, WPARAM w, LPARAM l)
 
         default:
         {
-          result = DefWindowProcA(window, message, w, l);
+          result = DefWindowProc(window, message, w, l);
         } break;
     }
 
@@ -80,25 +90,25 @@ int WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, int sho
     ds_assert(qpf_success);
     r32 target_ms_per_frame = 1.f/60.f;
 
-    WNDCLASSA wnd_class       = {};
+    WNDCLASS wnd_class       = {};
     wnd_class.style           = CS_OWNDC|CS_VREDRAW|CS_HREDRAW;
     wnd_class.lpfnWndProc     = window_proc;
     //wnd_class.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     wnd_class.hInstance       = instance;
-    wnd_class.lpszClassName   = "wnd_class";
-    auto Result               = RegisterClassA(&wnd_class);
+    wnd_class.lpszClassName   = L"wnd_class";
+    auto Result               = RegisterClass(&wnd_class);
 
     RECT wnd_dims = {0, 0, (s32)global_width, (s32)global_height};
     AdjustWindowRect(&wnd_dims, WS_OVERLAPPEDWINDOW, FALSE);
     wnd_dims.right  -= wnd_dims.left;
     wnd_dims.bottom -= wnd_dims.top;
 
-    HWND window = CreateWindowA("wnd_class", "Mind Down",
-                                WS_OVERLAPPEDWINDOW|WS_VISIBLE,
-                                CW_USEDEFAULT, CW_USEDEFAULT,
-                                wnd_dims.right,
-                                wnd_dims.bottom,
-                                0, 0, instance, 0);
+    HWND window = CreateWindow(L"wnd_class", L"Mind Down",
+                               WS_OVERLAPPEDWINDOW|WS_VISIBLE,
+                               CW_USEDEFAULT, CW_USEDEFAULT,
+                               wnd_dims.right,
+                               wnd_dims.bottom,
+                               0, 0, instance, 0);
 
     if(window) {
         RECT window_rect = {};
@@ -122,6 +132,8 @@ int WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, int sho
         u32 dpi = GetDpiForWindow(window);
         md_init_freetype(dpi);
 
+        b32 unicode = IsWindowUnicode(window);
+
         while(global_running && !global_error)
         {
             qpf_success = QueryPerformanceCounter((LARGE_INTEGER *)&current_performance_counter);
@@ -129,18 +141,28 @@ int WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, int sho
             r32 dtime = (r32)(current_performance_counter - last_performance_counter) / (r32)performance_counter_frequency;
             while(dtime <= target_ms_per_frame)
             {
-                while(PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
+                while(PeekMessage(&message, 0, 0, 0, PM_REMOVE))
                 {
+#if 0
                     switch(message.message)
                     {
                         case WM_KEYDOWN:
-                            {if (message.wParam == VK_ESCAPE) global_running = false;}
+                        {
+                            if (message.wParam == VK_ESCAPE) global_running = false;
+                        };
+
+                        case WM_CHAR:
+                        {
+                            inform("CHAR LOOP");
+                        } break;
+
                         default:
                         {
+#endif
                             TranslateMessage(&message);
                             DispatchMessage (&message);
-                        } break;
-                    }
+                        //} break;
+                    //}
                 }
                 qpf_success = QueryPerformanceCounter((LARGE_INTEGER *)&current_performance_counter);
                 ds_assert(qpf_success);
